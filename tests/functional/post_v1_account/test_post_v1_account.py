@@ -13,7 +13,7 @@ def test_post_v1_account():
     login_api = LoginApi(host='http://185.185.143.231:5051')
     mailhog_api = MailhogApi(host='http://185.185.143.231:5025')
 
-    login = 'bhs-test7'
+    login = 'bhs-test8'
     password ='123456789'
     email = f'{login}@test'
 
