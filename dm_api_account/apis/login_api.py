@@ -1,14 +1,9 @@
 import requests
 
+from restclient.client import RestClient
 
-class LoginApi:
-    def __init__(
-            self,
-            host,
-            headers=None
-    ):
-        self.host = host
-        self.email = headers
+
+class LoginApi(RestClient):
 
     def post_v1_account_login(
             self,
@@ -19,11 +14,8 @@ class LoginApi:
         :param json_data:
         :return:
         """
-        # json_data = {
-        #     'login': login,
-        #     'password': password,
-        #     'rememberMe': True,
-        # }
-        response = requests.post(url=f'{self.host}/v1/account/login',
-                                 json=json_data)
+        response = self.post(
+            path=f'/v1/account/login',
+            json=json_data
+        )
         return response

@@ -1,6 +1,8 @@
+from requests import JSONDecodeError
 from requests import session
 import structlog
 import uuid
+import curlify
 
 class RestClient:
     def __init__(self, host, headers=None):
@@ -38,11 +40,22 @@ class RestClient:
 
         rest_response = self.session.request(method=method, url=full_url, **kwargs)
 
+        curl = curlify.to_curl(rest_response.request)
+
+        print(curl)
+
         log.msg(
             event='Response',
             status_code = rest_response.status_code,
             headers=rest_response.headers,
-            json=rest_response.json()
+            json=self._get_json(rest_response),
         )
 
         return rest_response
+
+    @staticmethod
+    def _get_json(rest_response):
+        try:
+            return rest_response.json()
+        except JSONDecodeError:
+            return {}
