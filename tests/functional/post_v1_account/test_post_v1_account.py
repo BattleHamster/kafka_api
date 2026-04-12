@@ -1,7 +1,7 @@
-from textwrap import indent
-from typing import Any
-from json import loads
-from requests import Response
+import datetime
+from collections import namedtuple
+
+import pytest
 
 from helpers.account_helper import AccountHelper
 from restclient.configuration import Configuration as MailhogConfiguration
@@ -20,54 +20,47 @@ structlog.configure(
     ]
 )
 
-
-def test_post_v1_account():
-
+@pytest.fixture
+def mailhog_api():
     mailhog_configuration = MailhogConfiguration(host='http://185.185.143.231:5025')
+    mailhog_client = MailHogApi(configuration=mailhog_configuration)
+    return mailhog_client
+
+@pytest.fixture
+def account_api():
     dm_api_configuration = DmApiConfiguration(host='http://185.185.143.231:5051', disable_log=False)
-
     account = DMApiAccount(configuration=dm_api_configuration)
-    mailhog = MailHogApi(configuration=mailhog_configuration)
+    return account
 
-    account_helper = AccountHelper(dm_account_api=account, mailhog=mailhog)
+@pytest.fixture
+def account_helper(mailhog_api, account_api):
+    account_helper = AccountHelper(dm_account_api=account_api, mailhog=mailhog_api)
+    return account_helper
 
-    login = 'bhs-test13'
+@pytest.fixture()
+def prepare_user():
+    now = datetime.datetime.now()
+    data = now.strftime("%d_%m_%Y_%H_%M_%S")
+
+    login = f'bhs-test{data}'
     password ='123456789'
     email = f'{login}@test'
 
+    User = namedtuple("User", ['login', 'password', 'email'])
+    user = User(login=login, password=password, email=email)\
+
+    return user
+
+
+
+def test_post_v1_account(account_helper, prepare_user):
+
+    login = prepare_user.login
+    password = prepare_user.password
+    email = prepare_user.email
+
     account_helper.register_new_user(login=login, password=password, email=email)
-
     account_helper.user_login(login=login, password=password)
-
-    # 1. Регистрация пользователя
-    # json_data = {
-    #     'login': login,
-    #     'email': email,
-    #     'password': password,
-    # }
-    #
-    #
-    #
-    # response = account.account_api.post_v1_account(json_data=json_data)
-    # assert response.status_code == 201, f"User hasn't been created {response.json()}"
-    #
-    # # 2.1 Получить письмо из почтового сервера
-    # response = mailhog.mailhog_api.get_api_v2_messages()
-    # assert response.status_code == 200, f"Emails hasn't been collected {response.json()}"
-    #
-    # # 2.2 Получить активационный токен
-    # token = get_activation_token_by_login(login, response)
-    # assert token is not None, f"User token for user with {login} hasn't been collected"
-    #
-    #
-    # # 2. Активировать пользователя
-    # response = account.account_api.put_v1_account_token(token=token)
-    # assert response.status_code == 200, f"User activation failed {response.json()}"
-
-
-    # 3. Авторизоваться
-    # response = account.login_api.post_v1_account_login(json_data=json_data)
-    # assert response.status_code == 200, f"User authorization failed {response.json()}"
 
 
 
