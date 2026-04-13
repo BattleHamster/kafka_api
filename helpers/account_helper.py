@@ -44,6 +44,18 @@ class AccountHelper:
         self.dm_account_api = dm_account_api
         self.mailhog = mailhog
 
+    def auth_client(self, login, password):
+        response = self.dm_account_api.login_api.post_v1_account_login(
+            json_data={'login': login, 'password': password}
+        )
+
+        token = {
+            "x-dm-auth-token": response.headers["x-dm-auth-token"]
+        }
+
+        self.dm_account_api.account_api.set_headers(token)
+        self.dm_account_api.login_api.set_headers(token)
+
     def register_new_user(
             self,
             login: str,
@@ -81,6 +93,8 @@ class AccountHelper:
         response = self.dm_account_api.login_api.post_v1_account_login(json_data=json_data)
         assert response.status_code == 200, f"User authorization failed {response.json()}"
         return response
+
+
 
     @retry(stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000)
     def get_activation_token_by_login(

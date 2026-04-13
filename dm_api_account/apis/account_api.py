@@ -37,3 +37,16 @@ class AccountApi(RestClient):
             headers=headers
             )
         return response
+
+    def get_v1_account(
+            self,
+            **kwargs
+    ):
+        """
+        Get current user
+        :return:
+        """
+        response = self.get(
+            path=f'/v1/account',
+            **kwargs)
+        return response
